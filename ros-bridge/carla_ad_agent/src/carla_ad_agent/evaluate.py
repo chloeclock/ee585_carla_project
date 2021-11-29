@@ -23,7 +23,9 @@ class Evaluator():
         self._global_plan = None
         self._current_pose = None
         self._start_time = None
+        self._start_time_ROS = None
         self._end_time = None
+        self._end_time_ROS = None
         self._current_waypoint = None
         self._route_length = None
         self._current_speed = None
@@ -87,6 +89,7 @@ class Evaluator():
         """
         if not self._odom_initialized:
             self._start_time = time.time()
+            self._start_time_ROS = rospy.get_rostime().to_sec()
         
         if self._current_pose:
             delta = self.point_distance(odom.pose.pose.position, self._current_pose.position)
@@ -154,7 +157,8 @@ class Evaluator():
             return
 
         print("\x1b[6;30;42m------Simulation Result------")
-        print("Time: {} s".format(self._end_time - self._start_time))
+        print("Time: {} s".format(self._end_time_ROS - self._start_time_ROS))
+        print()
         print("Distance travelled: {} m".format(self._distance_travelled))
         print("Mission progress: {}% ".format(self._progress))
         print("Mission completed: {}".format(self._mission_complete))
@@ -197,13 +201,20 @@ class Evaluator():
 
                 # Time evaluation
                 self._end_time = time.time()
+                self._end_time_ROS = rospy.get_rostime().to_sec()
                 time_elapsed = self._end_time - self._start_time
-                if time_elapsed >= 60 * 5.0:
+                ROS_time_elapsed = self._end_time_ROS - self._start_time_ROS
+                # if time_elapsed >= 60 * 5.0:
+                #     print("Time is up")
+                #     self.output_result()
+                # else:
+                #     print("Timer: {} sec".format(time_elapsed))
+                if ROS_time_elapsed >= 60 * 5.0:
                     print("Time is up")
                     self.output_result()
                 else:
-                    print("Timer: {} sec".format(time_elapsed))
-
+                    # print("Timer: {} sec".format(time_elapsed))
+                    print("ROS Timer: {} sec".format(ROS_time_elapsed))
                 # Progress evaluation
                 if self._route_assigned:
                     self._current_waypoint = self.get_waypoint(self._current_pose.position)

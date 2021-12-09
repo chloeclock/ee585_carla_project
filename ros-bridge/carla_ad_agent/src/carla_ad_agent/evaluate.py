@@ -22,9 +22,7 @@ class Evaluator():
         """
         self._global_plan = None
         self._current_pose = None
-        self._start_time = None
         self._start_time_ROS = None
-        self._end_time = None
         self._end_time_ROS = None
         self._current_waypoint = None
         self._route_length = None
@@ -88,7 +86,6 @@ class Evaluator():
         callback on odometry
         """
         if not self._odom_initialized:
-            self._start_time = time.time()
             self._start_time_ROS = rospy.get_rostime().to_sec()
         
         if self._current_pose:
@@ -153,7 +150,7 @@ class Evaluator():
                 break
 
     def output_result(self):
-        if not self._end_time or not self._start_time:
+        if not self._end_time_ROS or not self._start_time_ROS:
             return
 
         print("\x1b[6;30;42m------Simulation Result------")
@@ -200,20 +197,16 @@ class Evaluator():
                         continue 
 
                 # Time evaluation
-                self._end_time = time.time()
                 self._end_time_ROS = rospy.get_rostime().to_sec()
-                time_elapsed = self._end_time - self._start_time
                 ROS_time_elapsed = self._end_time_ROS - self._start_time_ROS
                 # if time_elapsed >= 60 * 5.0:
                 #     print("Time is up")
                 #     self.output_result()
                 # else:
-                #     print("Timer: {} sec".format(time_elapsed))
                 if ROS_time_elapsed >= 60 * 5.0:
                     print("Time is up")
                     self.output_result()
                 else:
-                    # print("Timer: {} sec".format(time_elapsed))
                     print("ROS Timer: {} sec".format(ROS_time_elapsed))
                 # Progress evaluation
                 if self._route_assigned:
@@ -234,7 +227,7 @@ class Evaluator():
                 # on goal evaluation
                 distance_to_goal = self.point_distance(self._current_pose.position, self._goal_point)
                 print("Distance to goal {} m".format(distance_to_goal))
-                if distance_to_goal <= 4.0 and self._current_speed == 0.0:
+                if distance_to_goal <= 4.0 and self._current_speed <= 0.001:
                     if not self._on_goal_start_timer:
                         self._on_goal_start_timer = time.time()
                     else:
